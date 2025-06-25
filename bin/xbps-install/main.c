@@ -33,6 +33,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <pthread.h>
 
 #include <xbps.h>
 #include "defs.h"
@@ -66,7 +67,8 @@ usage(bool fail)
 	    " -u, --update                Update target package(s)\n"
 	    " -v, --verbose               Verbose messages\n"
 	    " -y, --yes                   Assume yes to all questions\n"
-	    " -V, --version               Show XBPS version\n");
+	    " -V, --version               Show XBPS version\n"
+		"     --max-threads			  Maximum amount of simultaneous threads used when downloading\n");
 	exit(fail ? EXIT_FAILURE : EXIT_SUCCESS);
 }
 
@@ -120,6 +122,7 @@ main(int argc, char **argv)
 		{ "yes", no_argument, NULL, 'y' },
 		{ "reproducible", no_argument, NULL, 1 },
 		{ "staging", no_argument, NULL, 2 },
+		{ "max-threads", required_argument, NULL, 3},
 		{ NULL, 0, NULL, 0 }
 	};
 	struct xbps_handle xh;
@@ -130,6 +133,7 @@ main(int argc, char **argv)
 	int maxcols, eexist = 0;
 
 	rootdir = cachedir = confdir = NULL;
+	max_threads = 1;
 	flags = rv = 0;
 	syncf = yes = force = drun = update = false;
 
@@ -142,6 +146,9 @@ main(int argc, char **argv)
 			break;
 		case 2:
 			flags |= XBPS_FLAG_USE_STAGE;
+			break;
+		case 3:
+			max_threads = optarg;
 			break;
 		case 'A':
 			flags |= XBPS_FLAG_INSTALL_AUTO;
